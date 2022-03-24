@@ -47,7 +47,8 @@ defmodule BankAPI.MixProject do
       {:plug_cowboy, "~> 2.5"},
       {:commanded, "~> 1.3"},
       {:eventstore, "~> 1.3", runtime: Mix.env() != :test},
-      {:commanded_eventstore_adapter, "~> 1.2", runtime: Mix.env() != :test}
+      {:commanded_eventstore_adapter, "~> 1.2", runtime: Mix.env() != :test},
+      {:commanded_ecto_projections, "~> 1.2.1"}
     ]
   end
 

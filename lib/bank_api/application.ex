@@ -7,13 +7,16 @@ defmodule BankAPI.Application do
 
   @impl true
   def start(_type, _args) do
+    # Supervisor.child_spec(BankAPI.Accounts.Projectors.AccountOpened, id: :account_opened),
     children =
-      [
-        BankAPI.Repo,
-        BankAPIWeb.Telemetry,
-        {Phoenix.PubSub, name: BankAPI.PubSub},
-        BankAPIWeb.Endpoint
-      ] ++ additional_children()
+      ([
+         BankAPI.Repo,
+         BankAPI.Accounts.Supervisor,
+         BankAPIWeb.Telemetry,
+         {Phoenix.PubSub, name: BankAPI.PubSub},
+         BankAPIWeb.Endpoint
+       ] ++ additional_children())
+      |> IO.inspect()
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
