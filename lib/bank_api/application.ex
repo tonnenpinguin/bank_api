@@ -8,15 +8,14 @@ defmodule BankAPI.Application do
   @impl true
   def start(_type, _args) do
     # Supervisor.child_spec(BankAPI.Accounts.Projectors.AccountOpened, id: :account_opened),
-    children =
-      ([
-         BankAPI.Repo,
-         BankAPI.Accounts.Supervisor,
-         BankAPIWeb.Telemetry,
-         {Phoenix.PubSub, name: BankAPI.PubSub},
-         BankAPIWeb.Endpoint
-       ] ++ additional_children())
-      |> IO.inspect()
+    children = [
+      BankAPI.Repo,
+      BankAPI.CommandedApplication,
+      BankAPI.Accounts.Supervisor,
+      BankAPIWeb.Telemetry,
+      {Phoenix.PubSub, name: BankAPI.PubSub},
+      BankAPIWeb.Endpoint
+    ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
@@ -30,11 +29,5 @@ defmodule BankAPI.Application do
   def config_change(changed, _new, removed) do
     BankAPIWeb.Endpoint.config_change(changed, removed)
     :ok
-  end
-
-  defp additional_children do
-    if Process.whereis(EventStore.Config.Store),
-      do: [BankAPI.EventStore],
-      else: []
   end
 end

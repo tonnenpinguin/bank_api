@@ -18,8 +18,11 @@ config :bank_api, BankAPIWeb.Endpoint,
   pubsub_server: BankAPI.PubSub,
   live_view: [signing_salt: "BHE/PJYC"]
 
-config :commanded,
-  event_store_adapter: Commanded.EventStore.Adapters.EventStore
+config :bank_api, BankAPI.CommandedApplication,
+  event_store: [
+    adapter: Commanded.EventStore.Adapters.EventStore,
+    event_store: BankAPI.EventStore
+  ]
 
 config :bank_api,
   event_stores: [BankAPI.EventStore]
