@@ -7,18 +7,13 @@ defmodule BankAPI.Application do
 
   @impl true
   def start(_type, _args) do
-    children = [
-      # Start the Ecto repository
-      BankAPI.Repo,
-      # Start the Telemetry supervisor
-      BankAPIWeb.Telemetry,
-      # Start the PubSub system
-      {Phoenix.PubSub, name: BankAPI.PubSub},
-      # Start the Endpoint (http/https)
-      BankAPIWeb.Endpoint
-      # Start a worker by calling: BankAPI.Worker.start_link(arg)
-      # {BankAPI.Worker, arg}
-    ]
+    children =
+      [
+        BankAPI.Repo,
+        BankAPIWeb.Telemetry,
+        {Phoenix.PubSub, name: BankAPI.PubSub},
+        BankAPIWeb.Endpoint
+      ] ++ additional_children()
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
@@ -32,5 +27,11 @@ defmodule BankAPI.Application do
   def config_change(changed, _new, removed) do
     BankAPIWeb.Endpoint.config_change(changed, removed)
     :ok
+  end
+
+  defp additional_children do
+    if Process.whereis(EventStore.Config.Store),
+      do: [BankAPI.EventStore],
+      else: []
   end
 end

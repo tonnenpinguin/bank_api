@@ -9,6 +9,13 @@ config :bank_api, BankAPI.Repo,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
 
+config :bank_api, BankAPI.EventStore,
+  username: "bank_api",
+  password: "bank_api",
+  database: "bank_api_eventstore_dev",
+  hostname: "localhost",
+  pool_size: 10
+
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #

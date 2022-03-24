@@ -21,6 +21,14 @@ config :bank_api, BankAPIWeb.Endpoint,
 config :commanded,
   event_store_adapter: Commanded.EventStore.Adapters.EventStore
 
+config :bank_api,
+  event_stores: [BankAPI.EventStore]
+
+config :bank_api, BankAPI.EventStore,
+  column_data_type: "jsonb",
+  serializer: EventStore.JsonbSerializer,
+  types: EventStore.PostgresTypes
+
 # Configures the mailer
 #
 # By default it uses the "Local" adapter which stores the emails
