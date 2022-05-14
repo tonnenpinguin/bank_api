@@ -5,53 +5,26 @@ defmodule BankAPI.Accounts do
 
   import Ecto.Query, warn: false
 
-  alias Ecto.Changeset
-  alias BankAPI.Repo
-  alias BankAPI.Router
+  alias BankAPI.{App, Repo}
   alias BankAPI.Accounts.Commands.OpenAccount
   alias BankAPI.Accounts.Projections.Account
 
   def get_account(uuid), do: Repo.get!(Account, uuid)
 
-  def open_account(account_params) do
-    changeset = account_opening_changeset(account_params)
+  def open_account(%{"initial_balance" => initial_balance}) do
+    account_uuid = UUID.uuid4()
 
-    if changeset.valid? do
-      account_uuid = UUID.uuid4()
-      initial_balance = changeset.changes.initial_balance
+    dispatch_result =
+      %OpenAccount{
+        initial_balance: initial_balance,
+        account_uuid: account_uuid
+      }
+      |> App.dispatch(consistency: :strong)
 
-      dispatch_result =
-        %OpenAccount{
-          initial_balance: initial_balance,
-          account_uuid: account_uuid
-        }
-        |> Router.dispatch()
-
-      case dispatch_result do
-        :ok ->
-          {
-            :ok,
-            %Account{
-              uuid: account_uuid,
-              current_balance: initial_balance
-            }
-          }
-
-        reply ->
-          reply
-      end
-    else
-      {:validation_error, changeset}
+    with :ok <- dispatch_result do
+      {:ok, get_account(account_uuid)}
     end
   end
 
-  defp account_opening_changeset(params) do
-    {
-      params,
-      %{initial_balance: :integer}
-    }
-    |> Changeset.cast(params, [:initial_balance])
-    |> Changeset.validate_required([:initial_balance])
-    |> Changeset.validate_number(:initial_balance, greater_than: 0)
-  end
+  def open_account(_params), do: {:error, :bad_command}
 end

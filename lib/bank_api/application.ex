@@ -10,7 +10,7 @@ defmodule BankAPI.Application do
     # Supervisor.child_spec(BankAPI.Accounts.Projectors.AccountOpened, id: :account_opened),
     children = [
       BankAPI.Repo,
-      BankAPI.CommandedApplication,
+      BankAPI.App,
       BankAPI.Accounts.Supervisor,
       BankAPIWeb.Telemetry,
       {Phoenix.PubSub, name: BankAPI.PubSub},

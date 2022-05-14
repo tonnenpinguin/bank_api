@@ -21,11 +21,13 @@ config :bank_api, BankAPI.EventStore,
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 10
 
-config :bank_api, BankAPI.CommandedApplication,
+config :bank_api, BankAPI.App,
   event_store: [
     adapter: Commanded.EventStore.Adapters.InMemory,
     event_store: BankAPI.EventStore
-  ]
+  ],
+  pubsub: :local,
+  registry: :local
 
 config :commanded, Commanded.EventStore.Adapters.InMemory,
   serializer: Commanded.Serialization.JsonSerializer
