@@ -11,7 +11,8 @@ defmodule BankAPI.Accounts do
     OpenAccount,
     CloseAccount,
     DepositIntoAccount,
-    WithdrawFromAccount
+    WithdrawFromAccount,
+    TransferBetweenAccounts
   }
 
   alias BankAPI.Accounts.Projections.Account
@@ -58,7 +59,7 @@ defmodule BankAPI.Accounts do
         account_uuid: account_uuid,
         deposit_amount: amount
       }
-      |> Router.dispatch(consistency: :strong)
+      |> App.dispatch(consistency: :strong)
 
     with :ok <- dispatch_result do
       get_account(account_uuid)
@@ -71,10 +72,20 @@ defmodule BankAPI.Accounts do
         account_uuid: account_uuid,
         withdraw_amount: amount
       }
-      |> Router.dispatch(consistency: :strong)
+      |> App.dispatch(consistency: :strong)
 
     with :ok <- dispatch_result do
       get_account(account_uuid)
     end
+  end
+
+  def transfer(source_id, amount, destination_id) do
+    %TransferBetweenAccounts{
+      account_uuid: source_id,
+      transfer_uuid: UUID.uuid4(),
+      transfer_amount: amount,
+      destination_account_uuid: destination_id
+    }
+    |> App.dispatch(consistency: :strong)
   end
 end

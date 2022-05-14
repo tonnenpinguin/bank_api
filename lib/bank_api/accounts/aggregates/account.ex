@@ -5,14 +5,16 @@ defmodule BankAPI.Accounts.Aggregates.Account do
     OpenAccount,
     CloseAccount,
     DepositIntoAccount,
-    WithdrawFromAccount
+    WithdrawFromAccount,
+    TransferBetweenAccounts
   }
 
   alias BankAPI.Accounts.Events.{
     AccountOpened,
     AccountClosed,
     DepositedIntoAccount,
-    WithdrawnFromAccount
+    WithdrawnFromAccount,
+    MoneyTransferRequested
   }
 
   def execute(
@@ -78,10 +80,15 @@ defmodule BankAPI.Accounts.Aggregates.Account do
 
   def execute(
         %__MODULE__{uuid: account_uuid, current_balance: current_balance},
-        %DepositIntoAccount{account_uuid: account_uuid, deposit_amount: amount}
+        %DepositIntoAccount{
+          account_uuid: account_uuid,
+          transfer_uuid: transfer_uuid,
+          deposit_amount: amount
+        }
       ) do
     %DepositedIntoAccount{
       account_uuid: account_uuid,
+      transfer_uuid: transfer_uuid,
       new_current_balance: current_balance + amount
     }
   end
@@ -102,12 +109,17 @@ defmodule BankAPI.Accounts.Aggregates.Account do
 
   def execute(
         %__MODULE__{uuid: account_uuid, current_balance: current_balance},
-        %WithdrawFromAccount{account_uuid: account_uuid, withdraw_amount: amount}
+        %WithdrawFromAccount{
+          account_uuid: account_uuid,
+          withdraw_amount: amount,
+          transfer_uuid: transfer_uuid
+        }
       ) do
     if current_balance - amount > 0 do
       %WithdrawnFromAccount{
         account_uuid: account_uuid,
-        new_current_balance: current_balance - amount
+        new_current_balance: current_balance - amount,
+        transfer_uuid: transfer_uuid
       }
     else
       {:error, :insufficient_funds}
@@ -117,6 +129,66 @@ defmodule BankAPI.Accounts.Aggregates.Account do
   def execute(
         %__MODULE__{},
         %WithdrawFromAccount{}
+      ) do
+    {:error, :not_found}
+  end
+
+  def execute(
+        %__MODULE__{
+          uuid: account_uuid,
+          closed?: true
+        },
+        %TransferBetweenAccounts{
+          account_uuid: account_uuid
+        }
+      ) do
+    {:error, :account_closed}
+  end
+
+  def execute(
+        %__MODULE__{uuid: account_uuid},
+        %TransferBetweenAccounts{
+          account_uuid: account_uuid,
+          destination_account_uuid: account_uuid
+        }
+      ) do
+    {:error, :transfer_to_same_account}
+  end
+
+  def execute(
+        %__MODULE__{
+          uuid: account_uuid,
+          current_balance: current_balance
+        },
+        %TransferBetweenAccounts{
+          account_uuid: account_uuid,
+          transfer_amount: transfer_amount
+        }
+      )
+      when current_balance < transfer_amount do
+    {:error, :insufficient_funds}
+  end
+
+  def execute(
+        %__MODULE__{uuid: account_uuid, closed?: false},
+        %TransferBetweenAccounts{
+          account_uuid: account_uuid,
+          transfer_uuid: transfer_uuid,
+          transfer_amount: transfer_amount,
+          destination_account_uuid: destination_account_uuid
+        }
+      ) do
+    %MoneyTransferRequested{
+      transfer_uuid: transfer_uuid,
+      source_account_uuid: account_uuid,
+      amount: transfer_amount,
+      destination_account_uuid: destination_account_uuid
+    }
+  end
+
+  def execute(
+        %__MODULE__{},
+        %TransferBetweenAccounts{}
       ) do
     {:error, :not_found}
   end
@@ -172,5 +244,12 @@ defmodule BankAPI.Accounts.Aggregates.Account do
       account
       | current_balance: new_current_balance
     }
+  end
+
+  def apply(
+        %__MODULE__{} = account,
+        %MoneyTransferRequested{}
+      ) do
+    account
   end
 end
