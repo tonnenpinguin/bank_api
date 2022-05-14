@@ -11,7 +11,7 @@ defmodule BankAPI.Test.ProjectorUtils do
     CASCADE;
     """
 
-    {:ok, _result} = Repo.query(truncate_readstore_tables_sql)
+    # {:ok, _result} = Repo.query(truncate_readstore_tables_sql)
 
     :ok
   end

@@ -11,7 +11,8 @@ defmodule BankAPI.Accounts.Projectors.AccountOpened do
   project(%Events.AccountOpened{} = event, fn multi ->
     Ecto.Multi.insert(multi, :account_opened, %Account{
       uuid: event.account_uuid,
-      current_balance: event.initial_balance
+      current_balance: event.initial_balance,
+      status: :open
     })
   end)
 end

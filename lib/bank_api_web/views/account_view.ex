@@ -8,7 +8,8 @@ defmodule BankAPIWeb.AccountView do
   def render("account.json", %{account: account}) do
     %{
       uuid: account.uuid,
-      current_balance: account.current_balance
+      current_balance: account.current_balance,
+      status: account.status
     }
   end
 end
